@@ -136,6 +136,116 @@ const requestListener = async (req, res) => {
       }))
       res.end()
     }
+  } else if (req.url === "/api/coaches/skill" && req.method === "GET") {
+    try {
+      const data = await AppDataSource.getRepository("Skill").find({
+        select: ["id", "name"]
+      })
+      res.writeHead(200, headers)
+      res.write(JSON.stringify({
+        status: "success",
+        data: data
+      }))
+      res.end()
+    } catch (error) {
+      res.writeHead(500, headers)
+      res.write(JSON.stringify({
+        status: "error",
+        message: "伺服器錯誤",
+      }))
+      res.end()
+    }
+  } else if (req.url === "/api/coaches/skill" && req.method === "POST") {
+    req.on("end", async () => {
+      try {
+        const { name } = JSON.parse(body);
+        
+        if (!isValidString(name)) {
+          res.writeHead(400, headers)
+          res.write(JSON.stringify({
+            status: "failed",
+            message: "欄位未填寫正確",
+          }))
+          res.end()
+          return
+        }
+
+        const skillRepo = AppDataSource.getRepository("Skill")
+        const isExist = await skillRepo.findOne({
+          where: {
+            name: name
+          }
+        })
+        if (isExist) {
+          res.writeHead(409, headers)
+          res.write(JSON.stringify({
+            status: "failed",
+            message: "資料重複",
+          }))
+          res.end()
+          return
+        }
+
+        const newSkill = skillRepo.create({
+          name
+        })
+
+        const result = await skillRepo.save(newSkill)
+
+        res.writeHead(200, headers)
+        res.write(JSON.stringify({
+          status: "success",
+          data: result
+        }))
+        res.end()
+
+      } catch (error) {
+        res.writeHead(500, headers)
+        res.write(JSON.stringify({
+          status: "error",
+          message: "伺服器錯誤",
+        }))
+        res.end()
+      }
+    })  
+  } else if (req.url.startsWith("/api/coaches/skill/") && req.method === "DELETE") {
+    try {
+      const skillId = req.url.split("/").pop();
+  
+      if (!isValidString(skillId)) {
+        res.writeHead(400, headers)
+        res.write(JSON.stringify({
+          status: "failed",
+          message: "ID錯誤",
+        }))
+        res.end()
+        return
+      }
+  
+      const result = await AppDataSource.getRepository("Skill").delete(skillId);
+      if (result.affected === 0) {
+        res.writeHead(404, headers)
+        res.write(JSON.stringify({
+          status: "failed",
+          message: "ID錯誤",
+        }))
+        res.end()
+        return
+      }
+      res.writeHead(200, headers)
+      res.write(JSON.stringify({
+        status: "success",
+      }))
+      res.end()
+      
+    } catch (error) {
+      res.writeHead(500, headers)
+      res.write(JSON.stringify({
+        status: "error",
+        message: "伺服器錯誤",
+      }))
+      res.end()
+    }
   } else if (req.method === "OPTIONS") {
     res.writeHead(200, headers)
     res.end()
