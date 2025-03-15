@@ -4,6 +4,7 @@ const router = express.Router()
 const { dataSource } = require('../db/data-source')
 const logger = require('../utils/logger')('skill')
 const { isValidString, isNumber } = require('../utils/validUtils')
+const appError = require('../utils/appError')
 
 router.get('/', async (req, res, next) => {
   try {
@@ -24,10 +25,7 @@ router.post('/', async (req, res, next) => {
     const { name } = req.body;
     
     if (!isValidString(name)) {
-      res.status(400).json({
-        status: "failed",
-        message: "欄位未填寫正確",
-      })
+      next(appError(400, "欄位未填寫正確"))
       return
     }
 
@@ -38,10 +36,7 @@ router.post('/', async (req, res, next) => {
       }
     })
     if (isExist) {
-      res.status(409).json({
-        status: "failed",
-        message: "資料重複",
-      })
+      next(appError(409, "資料重複"))
       return
     }
 
@@ -66,19 +61,13 @@ router.delete('/:skillId', async (req, res, next) => {
     const { skillId } = req.params;
 
     if (!isValidString(skillId)) {
-      res.status(400).json({
-        status: "failed",
-        message: "ID錯誤",
-      })
+      next(appError(400, "ID錯誤"))
       return
     }
 
     const result = await dataSource.getRepository("Skill").delete(skillId);
     if (result.affected === 0) {
-      res.status(400).json({
-        status: "failed",
-        message: "ID錯誤",
-      })
+      next(appError(400, "ID錯誤"))
       return
     }
     res.status(200).json({
