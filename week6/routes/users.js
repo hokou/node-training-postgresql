@@ -114,7 +114,7 @@ router.post('/login', async (req, res, next) => {
 router.get('/profile', isAuth, async (req, res, next) => {
   try {
     const { id } = req.user
-    if(isValidString(id)) {
+    if(!isValidString(id)) {
       next(appError(400, "欄位未填寫正確"))
       return
     }

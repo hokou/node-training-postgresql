@@ -6,9 +6,9 @@ const isAuth = require('../middlewares/isAuth')
 const handleErrorAsync = require('../utils/handleErrorAsync')
 const usersController = require('../controllers/users')
 
-router.post('/signup', handleErrorAsync(usersController.signup))
+router.post('/signup', handleErrorAsync(usersController.postSignup))
 
-router.post('/login', handleErrorAsync(usersController.login))
+router.post('/login', handleErrorAsync(usersController.postLogin))
 
 router.get('/profile', isAuth, handleErrorAsync(usersController.getProfile))
 
