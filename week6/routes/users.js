@@ -8,6 +8,7 @@ const logger = require('../utils/logger')('User')
 const { isValidString, isValidPassword } = require('../utils/validUtils')
 const appError = require('../utils/appError')
 const { generateJWT } = require('../utils/jwtUtils')
+const isAuth = require('../middlewares/isAuth')
 
 const saltRounds = 10
 
@@ -106,6 +107,78 @@ router.post('/login', async (req, res, next) => {
     })
   } catch (error) {
     logger.error('登入錯誤:', error)
+    next(error)
+  }
+})
+
+router.get('/profile', isAuth, async (req, res, next) => {
+  try {
+    const { id } = req.user
+    if(isValidString(id)) {
+      next(appError(400, "欄位未填寫正確"))
+      return
+    }
+
+    const userRepo = dataSource.getRepository('User')
+    const findUser = await userRepo.findOne({
+      where: {
+        id
+      }
+    })
+    if (!findUser) {
+      next(appError(400, "使用者不存在"))
+      return
+    }
+
+    res.status(200).json({
+      status: 'success',
+      data: {
+        email: findUser.email,
+        name: findUser.name
+      }
+    })
+  } catch (error) {
+    logger.error('取得使用者資料錯誤:', error)
+    next(error)
+  }
+})
+
+router.put('/profile', isAuth, async (req, res, next) => {
+  try {
+    const { id } = req.user
+    const { name } = req.body
+    if (!isValidString(name)) {
+      next(appError('400', '欄位未填寫正確'))
+      return
+    }
+    const userRepo = dataSource.getRepository('User')
+
+    const findUser = await userRepo.findOne({
+      where: {
+        id
+      }
+    })
+    if (findUser.name !== name) {
+      next(appError(400, "使用者名稱未變更"))
+      return
+    }
+
+    const updateUser = await userRepo.update({
+      id
+    }, {
+      name
+    })
+    if (updateUser.affected === 0) {
+      next(appError(400, "更新使用者失敗"))
+      return
+    }
+    
+    res.status(200).json({
+      status: 'success',
+    })
+    
+  } catch (error) {
+    logger.error('取得使用者資料錯誤:', error)
     next(error)
   }
 })
