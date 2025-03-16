@@ -7,8 +7,10 @@ const logger = require('../utils/logger')('Admin')
 const { isValidString, isNumber } = require('../utils/validUtils')
 const e = require('express')
 const appError = require('../utils/appError')
+const isAuth = require('../middlewares/isAuth')
+const isCoach = require('../middlewares/isCoach')
 
-router.post('/coaches/courses', async (req, res, next) => {
+router.post('/coaches/courses', isAuth, isCoach, async (req, res, next) => {
   try {
     const { user_id, skill_id, name, description, start_at, end_at, max_participants, meeting_url } = req.body
 
@@ -59,7 +61,7 @@ router.post('/coaches/courses', async (req, res, next) => {
   }
 })
 
-router.put('/coaches/courses/:courseId', async (req, res, next) => {
+router.put('/coaches/courses/:courseId', isAuth, isCoach, async (req, res, next) => {
   try {
     const { courseId } = req.params
     const { skill_id, name, description, start_at, end_at, max_participants, meeting_url } = req.body
